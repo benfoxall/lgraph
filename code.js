@@ -37,6 +37,55 @@ _.mixin({
 });
 
 
+// Lets you build a linked list of timestamps and gives some
+// functionality to compare the artists deltas between the
+// timestamps.
+//
+// props to Ed for inspiration on the artists comparison
+//
+// Not actually used yet. Though is going to make things crazy
+// good when it is.
+var timestamp = function(prev){
+	var $prev = prev, $next;
+	var add = function(){
+		return $next = timestamp(this);
+	}
+
+	var $artists = {};
+	var setArtists = function(artists){
+		$artists = artists
+	};
+
+	var diffs = function(other){
+		var kys = _({}).chain()
+				.extend($artists,other)
+				.keys()
+				.sort()
+				.uniq(true)
+				.value();
+		return kys.map(function(k){
+			return [k, $artists[k] || 0, other[k] || 0];
+		});
+	};
+
+
+	return {
+		add:add,
+
+		setArtists:setArtists,
+		artists:function(){
+			return $artists;
+		},
+		d_next:function(){
+			return diffs($next.artists());
+		},
+		d_prev:function(){
+			return diffs($prev.artists());
+		}
+	};
+};
+
+
 // this won't actually do anything with the current
 // implementation of jsonp callbacks - though there
 // is a nice way to approach this which I'm working
