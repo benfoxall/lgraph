@@ -74,8 +74,8 @@ var timestamps = list({
 		return this.$artists;
 	},
 	deltas: function(ts){
-		from = this.artists() || {};
-		to = ts ? ts.artists() || {} : {};
+		var from = this.artists() || {};
+		var to = ts ? ts.artists() || {} : {};
 		
 		return _({}).chain()
 			.extend(from,to)
