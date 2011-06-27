@@ -37,6 +37,26 @@ _.mixin({
 });
 
 
+// A (double linked) list wrapper, this lets you link together 
+// objects of the same prototype.
+var list = function(proto, prev){
+	var $proto = proto, $prev = prev, $next;
+	return {
+		create:function(){
+			$next = list($proto, this);
+			$next.__proto__ = $proto;
+			return $next;
+		},
+		next:function(){
+			return $next;
+		},
+		prev:function(){
+			return $prev;
+		}
+	};
+};
+
+
 // Lets you build a linked list of timestamps and gives some
 // functionality to compare the artists deltas between the
 // timestamps.
