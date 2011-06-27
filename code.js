@@ -104,6 +104,8 @@ var err = function(message){
 	});
 	var content = $('<span>').text(message).prepend(rm);
 	$('p.err').append(content);
+	
+	console && console.error(message);
 }
 
 
