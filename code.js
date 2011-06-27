@@ -65,45 +65,29 @@ var list = function(proto, prev){
 //
 // Not actually used yet. Though is going to make things crazy
 // good when it is.
-var timestamp = function(prev){
-	var $prev = prev, $next;
-	var add = function(){
-		return $next = timestamp(this);
-	}
-
-	var $artists = {};
-	var setArtists = function(artists){
-		$artists = artists
-	};
-
-	var diffs = function(other){
-		var kys = _({}).chain()
-				.extend($artists,other)
-				.keys()
-				.sort()
-				.uniq(true)
-				.value();
-		return kys.map(function(k){
-			return [k, $artists[k] || 0, other[k] || 0];
-		});
-	};
-
-
-	return {
-		add:add,
-
-		setArtists:setArtists,
-		artists:function(){
-			return $artists;
-		},
-		d_next:function(){
-			return diffs($next.artists());
-		},
-		d_prev:function(){
-			return diffs($prev.artists());
+var timestamps = list({
+	artists:function(data){
+		if(data){
+			this.$artists = data;
+			//also invalidate prev/next
 		}
-	};
-};
+		return this.$artists;
+	},
+	deltas: function(ts){
+		from = this.artists() || {};
+		to = ts ? ts.artists() || {} : {};
+		
+		return _({}).chain()
+			.extend(from,to)
+			.keys()
+			.sort()
+			.uniq(true)
+			.map(function(k){
+				return [k, from[k] || 0, to[k] || 0];
+			}).value();
+	}
+});
+
 
 
 // this won't actually do anything with the current
