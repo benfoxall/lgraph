@@ -82,8 +82,8 @@ var timestamps = list({
 		return this.$artists;
 	},
 	deltas: function(ts){
-		var from = this.artists() || {};
-		var to = ts && ts.artists ? ts.artists() || {} : {};
+		var from = ts && ts.artists ? ts.artists() || {} : {};
+		var to = this.artists() || {};
 		
 		return _({}).chain()
 			.extend(from,to)
@@ -91,7 +91,9 @@ var timestamps = list({
 			.sort()
 			.uniq(true)
 			.map(function(k){
-				return [k, parseInt(from[k] || 0,10), parseInt(to[k] || 0,10)];
+				var v_from = parseInt(from[k] || 0,10);
+				var v_to = parseInt(to[k] || 0,10);
+				return [k, v_from, v_to];
 			}).value();
 	},
 	view:function(what){
@@ -101,6 +103,7 @@ var timestamps = list({
 		this.$view && this.$view(this);
 	}
 });
+
 
 
 var view = function(){
@@ -124,10 +127,9 @@ var view = function(){
 		var left = timestamp.deltas(timestamp.prev());
 		//console.log(left);
 		
-		var x = width;0;
-		var x2 = 0; width / 2;
+		var x = 0;
+		var x2 = width / 2;
 		
-		var y1 = 0, y2 = 0;
 		
 		var from_total = 0, to_total = 0;
 		
@@ -136,9 +138,42 @@ var view = function(){
 			var from = d[1];
 			var to = d[2];
 			
-			// var m = (from + to) / 2;
+			var from2 = (from + to)/2;
 			
-			//draw
+			
+			ctx.fillStyle = color(artist);
+			
+			ctx.beginPath();
+			ctx.moveTo(x,from_total);
+			ctx.lineTo(x,from_total + from2);
+			
+			ctx.lineTo(x2,to_total + to);
+			ctx.lineTo(x2,to_total);
+			ctx.fill();
+			
+			from_total += from2;
+			to_total += to;
+			
+			
+		});
+		
+		
+		
+		var right = timestamp.deltas(timestamp.next());
+		//console.log(left);
+		
+		var x = width/2;
+		var x2 = width;
+		
+		var from_total = 0, to_total = 0;
+		
+		_(right).each(function(d){
+			var artist = d[0];
+			var from = d[2];
+			var to = d[1];
+			
+			var to2 = (from + to)/2;
+			
 			
 			ctx.fillStyle = color(artist);
 			
@@ -146,40 +181,12 @@ var view = function(){
 			ctx.moveTo(x,from_total);
 			ctx.lineTo(x,from_total + from);
 			
-			ctx.lineTo(x2,to_total + to);
+			ctx.lineTo(x2,to_total + to2);
 			ctx.lineTo(x2,to_total);
 			ctx.fill();
 			
-			// ctx.moveTo(x,y1);
-			// ctx.lineTo(x,y1 + y1diff);
-			// ctx.lineTo(x2,y2 + y2diff);
-			// ctx.lineTo(x2,y2);
-			// ctx.lineTo(x,y1);
-			// ctx.fill();
-			
-			
-			// console.log(from_total, to_total, from, to);
-			
 			from_total += from;
-			to_total += to;
-			
-			
-			
-			
-			
-			// var y1diff = scale * from;
-			// var y2diff = scale * to;
-			
-			// ctx.beginPath();
-			// ctx.moveTo(x,y1);
-			// ctx.lineTo(x,y1 + y1diff);
-			// ctx.lineTo(x2,y2 + y2diff);
-			// ctx.lineTo(x2,y2);
-			// ctx.lineTo(x,y1);
-			// ctx.fill();
-			
-			// y1 += y1diff;
-			// y2 += y2diff;
+			to_total += to2;
 			
 			
 		});
