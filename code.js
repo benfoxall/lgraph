@@ -43,9 +43,13 @@ var list = function(proto, prev){
 	var $proto = proto, $prev = prev, $next;
 	return {
 		create:function(){
-			$next = list($proto, this);
-			$next.__proto__ = $proto;
-			return $next;
+			if($next){
+				return $next.create()
+			} else {
+				$next = list($proto, this);
+				$next.__proto__ = $proto;
+				return $next;	
+			}
 		},
 		next:function(){
 			return $next;
@@ -70,12 +74,16 @@ var timestamps = list({
 		if(data){
 			this.$artists = data;
 			//also invalidate prev/next
+			this.redraw();
+			
+			this.next() && this.next().redraw();
+			this.prev() && this.prev().redraw();
 		}
 		return this.$artists;
 	},
 	deltas: function(ts){
 		var from = this.artists() || {};
-		var to = ts ? ts.artists() || {} : {};
+		var to = ts && ts.artists ? ts.artists() || {} : {};
 		
 		return _({}).chain()
 			.extend(from,to)
@@ -83,10 +91,136 @@ var timestamps = list({
 			.sort()
 			.uniq(true)
 			.map(function(k){
-				return [k, from[k] || 0, to[k] || 0];
+				return [k, parseInt(from[k] || 0,10), parseInt(to[k] || 0,10)];
 			}).value();
+	},
+	view:function(what){
+		this.$view = what;
+	},
+	redraw:function(){
+		this.$view && this.$view(this);
 	}
 });
+
+
+var view = function(){
+	var width = 180;
+	var height = 600;
+	
+	var canvas = $('<canvas height="'+height+'" width="'+width+'" id="canvas"></canvas>');
+	$("#display").append(canvas);
+	
+	var scale = 1;
+	
+	return function(t){
+		//TODO check for support
+		var timestamp = t;
+		//console.log("VIEW", timestamp);
+		var ctx = canvas.get(0).getContext('2d');
+		
+		ctx.fillStyle = 'white';
+		ctx.fillRect(0,0,width,height);
+		
+		var left = timestamp.deltas(timestamp.prev());
+		//console.log(left);
+		
+		var x = width;0;
+		var x2 = 0; width / 2;
+		
+		var y1 = 0, y2 = 0;
+		
+		var from_total = 0, to_total = 0;
+		
+		_(left).each(function(d){
+			var artist = d[0];
+			var from = d[1];
+			var to = d[2];
+			
+			// var m = (from + to) / 2;
+			
+			//draw
+			
+			ctx.fillStyle = color(artist);
+			
+			ctx.beginPath();
+			ctx.moveTo(x,from_total);
+			ctx.lineTo(x,from_total + from);
+			
+			ctx.lineTo(x2,to_total + to);
+			ctx.lineTo(x2,to_total);
+			ctx.fill();
+			
+			// ctx.moveTo(x,y1);
+			// ctx.lineTo(x,y1 + y1diff);
+			// ctx.lineTo(x2,y2 + y2diff);
+			// ctx.lineTo(x2,y2);
+			// ctx.lineTo(x,y1);
+			// ctx.fill();
+			
+			
+			// console.log(from_total, to_total, from, to);
+			
+			from_total += from;
+			to_total += to;
+			
+			
+			
+			
+			
+			// var y1diff = scale * from;
+			// var y2diff = scale * to;
+			
+			// ctx.beginPath();
+			// ctx.moveTo(x,y1);
+			// ctx.lineTo(x,y1 + y1diff);
+			// ctx.lineTo(x2,y2 + y2diff);
+			// ctx.lineTo(x2,y2);
+			// ctx.lineTo(x,y1);
+			// ctx.fill();
+			
+			// y1 += y1diff;
+			// y2 += y2diff;
+			
+			
+		});
+		
+		
+        // var right = timestamp.deltas(timestamp.next());
+        // console.log(right);
+        // 
+        // var x = width;
+        // var x2 = width / 2;
+        // 
+        // var y1 = 0, y2 = 0;
+        // _(right).each(function(d){
+        //  var artist = d[0];
+        //  var from = d[1];
+        //  var to = d[2];
+        //  
+        //  var m = (from + to) / 2;
+        //  
+        //  
+        //  ctx.fillStyle = color(artist);
+        //  
+        //  var y1diff = scale * from;
+        //  var y2diff = scale * to;
+        //  
+        //  ctx.beginPath();
+        //  ctx.moveTo(x,y1);
+        //  ctx.lineTo(x,y1 + y1diff);
+        //  ctx.lineTo(x2,y2 + y2diff);
+        //  ctx.lineTo(x2,y2);
+        //  ctx.lineTo(x,y1);
+        //  ctx.fill();
+        //  
+        //  y1 += y1diff;
+        //  y2 += y2diff;
+        //  
+        //  
+        // })
+	
+	};
+}
 
 
 
@@ -98,14 +232,14 @@ $.ajaxSetup({ cache: true });
 
 
 //display an error at the top of the page
-var err = function(message){
+var err = function(message,err){
 	var rm = $('<button>x</button>').click(function(){
 		$(this).parent().remove();
 	});
 	var content = $('<span>').text(message).prepend(rm);
 	$('p.err').append(content);
 	
-	console && console.error(message);
+	console && console.error(message, err || '');
 }
 
 
@@ -149,8 +283,37 @@ var fetch = function(username,count){
 	//get the list of weekly charts
 	last_fm('user.getweeklychartlist',{user:username}).done(function(data){
 		var chart = data.weeklychartlist.chart;
+		chart.reverse();
+		_(chart).each(function(week,i){
+			if(i > count){
+				return;//unbreakable from _v1.1.3
+			}
+			
+			
+			//hack the renderer and timestamp together
+			// timestamp.view(view());
+			
+			var timestamp = timestamps.create();
+			timestamp.view(view());
+			timestamp.TESTVAR = i;
+			
+			last_fm('user.getweeklyartistchart', {user:username, from:week.from, to:week.to}).done(function(data){
+				try{
+					var artists = _(data.weeklyartistchart.artist).reduce(function(memo, a){
+						memo[a.name] = a.playcount;
+						return memo;
+					},{});
+					
+					timestamp.artists(artists);
+					
+				} catch(e) {
+					err('Unable to process',e);
+				}
+			});
+			
+		});
 		
-		var sem = count;
+		/*var sem = count;
 		
 		for (var i=0; i < count; i++) {
 			var timespan = chart.pop();
@@ -192,7 +355,7 @@ var fetch = function(username,count){
 			
 			last_fm('user.getweeklyartistchart', {user:username, from:timespan.from, to:timespan.to}).done(handle)
 			
-		};
+		};*/
 		
 	})
 	
@@ -266,13 +429,13 @@ var color = function(key){
 	var g = parseInt(Math.abs(h - 256));
 	var b = parseInt(Math.abs(h - 512));
 	
-	return "rgb("+Math.min(r,256)+","+Math.min(g,256)+","+Math.min(b,256)+")"
+	return "rgba("+Math.min(r,256)+","+Math.min(g,256)+","+Math.min(b,256)+",0.6)"
 	
 }
 
 // The actual drawing stuff - took a few different approaches here (it shows).
 var render = function(){
-	
+/*	
 	var interval_width = 180;
 	
 	var width = chart_data.length * interval_width;
@@ -332,5 +495,7 @@ var render = function(){
 	} else {
 		err('No Canvas Support');
 	};
-	
+	*/
 };
+
+
