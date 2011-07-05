@@ -42,7 +42,7 @@ _.mixin({
 var list = function(proto, prev){
 	var $proto = proto, $prev = prev, $next;
 	return {
-		create:function(){
+		create:function(){ // this is O(n) at the moment, could be using it better
 			if($next){
 				return $next.create()
 			} else {
@@ -56,6 +56,9 @@ var list = function(proto, prev){
 		},
 		prev:function(){
 			return $prev;
+		},
+		cut:function(){//detatch the next elements
+			$next = undefined;
 		}
 	};
 };
@@ -137,6 +140,9 @@ var view = function(){
 	var scale = 1;
 	
 	return function(timestamp){
+		if(!(canvas.get(0) && canvas.get(0).getContext)){
+			return;
+		}
 		
 		//TODO check for support
 		var ctx = canvas.get(0).getContext('2d');
@@ -176,6 +182,25 @@ var view = function(){
 		
 		var right = timestamp.deltas(timestamp.next());
 		draw(right, width/2, width);
+		
+		//annotate the artists
+		
+		ctx.fillStyle = 'black';
+		var y = 0;
+		
+		_(left).each(function(d){
+			var artist = d[0], to = d[1], from = d[2];
+			
+			var diff = parseInt(to,10);
+
+			// console.log(y,value, key)
+			if(diff > 50){
+				ctx.fillText(artist, width/2, y + (diff/2) - 10);	
+			}
+			
+			y += diff;
+		})
+		
 		
 	};
 }
@@ -236,6 +261,12 @@ var chart_data;
 // 1. Get the weeks availible
 // 2. Get the artist chart for each week
 var fetch = function(username,count){
+	
+	//reset
+	$("#display").html("");
+	
+	timestamps.cut();
+	
 	chart_data = [];
 	
 	//get the list of weekly charts
