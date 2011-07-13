@@ -104,6 +104,31 @@ var timestamps = list({
 				return [k, v_from, v_to];
 			}).value();
 	},
+	
+	ndeltas: function(){
+		var a = {};
+		var b = this.artists();
+		var c = {};
+		
+		try{ a = this.prev().artists() } catch (e){}
+		try{ c = this.next().artists() } catch (e){}
+		
+		
+		var keys = _({}).chain()
+					.extend({},a,b,c)
+					.keys()
+					.sort()
+					.value();
+		
+		return keys.map(function(k){
+			var a_v = parseInt(a[k] || 0, 10);
+			var b_v = parseInt(b[k] || 0, 10);
+			var c_v = parseInt(c[k] || 0, 10);
+			
+			return [k, a_v, b_v, c_v];
+		})
+		
+	},
 	view:function(what){
 		this.$view = what;
 	},
@@ -152,6 +177,45 @@ var view = function(){
 		ctx.fillRect(0,0,width,height);
 		
 		
+		
+		var y1 = 0, y2 = 0, y3 = 0;
+		var x1 = 0, x2 = width/2, x3 = width;
+		
+		_(timestamp.ndeltas()).each(function(delta){
+			
+			var artist = delta[0];
+			var v1 = delta[1];
+			var v2 = delta[2];
+			var v3 = delta[3];
+			
+			
+			var enter_y = (v1 + v2)/2;
+			var exit_y  = (v2 + v3)/2;
+			
+			ctx.fillStyle = color(artist);
+			
+			ctx.beginPath();
+			ctx.moveTo(x1,y1);
+			ctx.lineTo(x1,y1 + enter_y);
+			
+			ctx.lineTo(x2,y2 + v2);
+			
+			ctx.lineTo(x3,y3 + exit_y);
+			ctx.lineTo(x3,y3);
+			
+			ctx.lineTo(x2,y2);
+			ctx.moveTo(x1,y1);
+
+			ctx.fill();
+			
+			
+			y1 += enter_y;
+			y2 += v2;
+			y3 += exit_y;
+			
+		});
+		
+		/*
 		var draw = function(data, x1, x2){
 			var y1 = 0; var y2 = 0;
 			
@@ -177,14 +241,16 @@ var view = function(){
 			
 		};
 		
+		/*
 		var left = timestamp.deltas(timestamp.prev());
 		draw(left, width/2, 0);
 		
 		var right = timestamp.deltas(timestamp.next());
 		draw(right, width/2, width);
-		
+		*/
 		//annotate the artists
 		
+		var left = timestamp.deltas(timestamp.prev());
 		ctx.fillStyle = 'black';
 		var y = 0;
 		
