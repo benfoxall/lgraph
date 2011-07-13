@@ -37,8 +37,8 @@ _.mixin({
 });
 
 
-// A (double linked) list wrapper, this lets you link together 
-// objects of the same prototype.
+// A (double linked) list wrapper, that gives all elements
+// the same prototype object
 var list = function(proto, prev){
 	var $proto = proto, $prev = prev, $next;
 	return {
@@ -69,9 +69,6 @@ var list = function(proto, prev){
 // timestamps.
 //
 // props to Ed for inspiration on the artists comparison
-//
-// Not actually used yet. Though is going to make things crazy
-// good when it is.
 var timestamps = list({
 	artists:function(data){
 		if(data){
@@ -84,28 +81,7 @@ var timestamps = list({
 		}
 		return (this.$artists || {});
 	},
-	deltas: function(ts){
-		var from = this.artists();
-		var to = {};
-		if(ts && ts.artists){
-			to = ts.artists();
-		}
-		
-		// var to = ts && ts.artists ? ts.artists() || {} : {};
-		
-		return _({}).chain()
-			.extend(from,to)
-			.keys()
-			.sort()
-			.uniq(true)
-			.map(function(k){
-				var v_from = parseInt(from[k] || 0,10);
-				var v_to = parseInt(to[k] || 0,10);
-				return [k, v_from, v_to];
-			}).value();
-	},
-	
-	ndeltas: function(){
+	deltas: function(){
 		var a = {};
 		var b = this.artists();
 		var c = {};
@@ -203,7 +179,7 @@ var view = function(){
 		var y1 = 0, y2 = 0, y3 = 0;
 		var x1 = 0, x2 = width/2, x3 = width;
 		
-		_(timestamp.ndeltas()).each(function(delta){
+		_(timestamp.deltas()).each(function(delta){
 			
 			var artist = delta[0];
 			var v1 = delta[1];
@@ -235,42 +211,6 @@ var view = function(){
 			
 		});
 		
-		
-		
-		/*
-		var draw = function(data, x1, x2){
-			var y1 = 0; var y2 = 0;
-			
-			_(data).each(function(d){
-				var artist = d[0], from = d[1], to = d[2];
-				
-				var exit_y = (from + to)/2;
-				
-				ctx.fillStyle = color(artist);
-				
-				ctx.beginPath();
-				ctx.moveTo(x1,y1);
-				ctx.lineTo(x1,y1 + from);
-
-				ctx.lineTo(x2,y2 + exit_y);
-				ctx.lineTo(x2,y2);
-				ctx.fill();
-
-				y1 += from;
-				y2 += exit_y;
-				
-			});
-			
-		};
-		
-		/*
-		var left = timestamp.deltas(timestamp.prev());
-		draw(left, width/2, 0);
-		
-		var right = timestamp.deltas(timestamp.next());
-		draw(right, width/2, width);
-		*/
-		//annotate the artists
 		
 		var left = timestamp.deltas(timestamp.prev());
 		ctx.fillStyle = 'black';
