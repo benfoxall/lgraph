@@ -129,6 +129,12 @@ var timestamps = list({
 		})
 		
 	},
+	plays:function(){ //the total number of plays at timestamp
+		var values = _(this.artists()).values();
+		return _(values).reduce(function(b,a){
+			return parseInt(a,10) + parseInt(b, 10);
+		},0);
+	},
 	view:function(what){
 		this.$view = what;
 	},
@@ -162,15 +168,31 @@ var view = function(){
 	var canvas = $('<canvas height="'+height+'" width="'+width+'" id="canvas"></canvas>');
 	$("#display").append(canvas);
 	
-	var scale = 1;
+	var scale = 1.3;
+	
+	width  /= scale;
+	height /= scale;
 	
 	return function(timestamp){
 		if(!(canvas.get(0) && canvas.get(0).getContext)){
 			return;
 		}
 		
-		//TODO check for support
+		var h1 = 0;
+		var h2 = timestamp.plays();
+		var h3 = 0;
+		
+		try{h1 = timestamp.prev().plays()} catch(e){}
+		try{h3 = timestamp.next().plays()} catch(e){}
+		
+		canvas.get(0).height = _([h1||0,h2||0,h3||0,100]).max() * scale; //don't ask
+		
+		
+		
 		var ctx = canvas.get(0).getContext('2d');
+		
+		ctx.save();
+		ctx.scale(scale,scale);
 		
 		//clear the canvas
 		ctx.fillStyle = 'white';
@@ -212,6 +234,8 @@ var view = function(){
 			y3 += exit_y;
 			
 		});
+		
+		
 		
 		/*
 		var draw = function(data, x1, x2){
@@ -258,12 +282,15 @@ var view = function(){
 			var diff = parseInt(to,10);
 
 			// console.log(y,value, key)
-			if(diff > 50){
+			if(diff > 20){
 				ctx.fillText(artist, width/2, y + (diff/2) - 10);	
 			}
 			
 			y += diff;
-		})
+		});
+		
+		
+		ctx.restore();
 		
 		
 	};
