@@ -198,13 +198,11 @@ var view = function(){
 			ctx.moveTo(x1,y1);
 			ctx.lineTo(x1,y1 + enter_y);
 			
-			ctx.lineTo(x2,y2 + v2);
+			ctx.bezierCurveTo(x2,y2 + v2, x2,y2 + v2, x3,y3 + exit_y)
 			
-			ctx.lineTo(x3,y3 + exit_y);
 			ctx.lineTo(x3,y3);
 			
-			ctx.lineTo(x2,y2);
-			ctx.moveTo(x1,y1);
+			ctx.bezierCurveTo(x2,y2,x2,y2, x1,y1);
 
 			ctx.fill();
 			
