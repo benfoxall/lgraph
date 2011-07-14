@@ -37,32 +37,52 @@ _.mixin({
 });
 
 
+
 // A (double linked) list wrapper, that gives all elements
 // the same prototype object
-var list = function(proto, prev){
-	var $proto = proto, $prev = prev, $next;
+var list = function(proto){
+	var $first, $last, $proto = proto;
+	
 	return {
-		create:function(){ // this is O(n) at the moment, could be using it better
-			if($next){
-				return $next.create()
-			} else {
-				$next = list($proto, this);
-				$next.__proto__ = $proto;
-				return $next;	
+		push:function(args){
+			
+			var el = element();
+			el.__proto__ = proto;
+			
+			if($last) {
+				$last.next(el);
+				el.prev($last);
 			}
+			
+			if(!$first) $first = el;
+			
+			return $last = el;
 		},
-		next:function(){
-			return $next;
+		first:function(){
+			return $first;
 		},
-		prev:function(){
-			return $prev;
+		last:function(){
+			return $last;
 		},
-		cut:function(){//detatch the next elements
-			$next = undefined;
+		clear:function(){
+			$first = $last = null;
 		}
 	};
+	
+	function element(){
+		var $prev, $next;
+		return {
+			prev : function(el){
+				if(el) $prev = el;
+				return $prev;
+			},
+			next : function(el){
+				if(el) $next = el;
+				return $next;
+			}
+		};
+	}
 };
-
 
 // Lets you build a linked list of timestamps and gives some
 // functionality to compare the artists deltas between the
@@ -135,7 +155,6 @@ var color = function(key){
 	return "rgba("+Math.min(r,256)+","+Math.min(g,256)+","+Math.min(b,256)+",0.9)"
 	
 }
-
 
 var view = function(){
 	var width = 180;
@@ -296,7 +315,7 @@ var fetch = function(username,count){
 	//reset
 	$("#display").html("");
 	
-	timestamps.cut();
+	timestamps.clear();
 	
 	chart_data = [];
 	
@@ -313,9 +332,8 @@ var fetch = function(username,count){
 			//hack the renderer and timestamp together
 			// timestamp.view(view());
 			
-			var timestamp = timestamps.create();
+			var timestamp = timestamps.push();
 			timestamp.view(view());
-			timestamp.TESTVAR = i;
 			
 			last_fm('user.getweeklyartistchart', {user:username, from:week.from, to:week.to}).done(function(data){
 				try{
