@@ -41,7 +41,7 @@ _.mixin({
 // A (double linked) list wrapper, that gives all elements
 // the same prototype object
 var list = function(proto){
-	var $first, $last, $proto = proto;
+	var $last, $proto = proto;
 	
 	return {
 		push:function(args){
@@ -54,18 +54,10 @@ var list = function(proto){
 				el.prev($last);
 			}
 			
-			if(!$first) $first = el;
-			
 			return $last = el;
 		},
-		first:function(){
-			return $first;
-		},
-		last:function(){
-			return $last;
-		},
 		clear:function(){
-			$first = $last = null;
+			$last = null;
 		}
 	};
 	
@@ -231,14 +223,13 @@ var view = function(){
 		});
 		
 		
-		var left = timestamp.deltas(timestamp.prev());
 		ctx.fillStyle = 'black';
 		var y = 0;
 		
-		_(left).each(function(d){
+		_(timestamp.deltas()).each(function(d){
 			var artist = d[0], to = d[1], from = d[2];
 			
-			var diff = parseInt(to,10);
+			var diff = parseInt(from,10);
 
 			// console.log(y,value, key)
 			if(diff > 20){
