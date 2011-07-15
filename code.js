@@ -37,44 +37,36 @@ _.mixin({
 });
 
 
-
-// A (double linked) list wrapper, that gives all elements
-// the same prototype object
+// This is a basic double linked list where each element
+// is given the same prototype object
 var list = function(proto){
 	var $last, $proto = proto;
-	
 	return {
 		push:function(args){
-			
-			var el = element();
-			el.__proto__ = proto;
-			
-			if($last) {
-				$last.next(el);
-				el.prev($last);
-			}
-			
+			var el = element($last);
+			el.__proto__ = $proto;
+			if($last) $last.next(el);
 			return $last = el;
 		},
 		clear:function(){
 			$last = null;
 		}
-	};
-	
-	function element(){
-		var $prev, $next;
-		return {
-			prev : function(el){
-				if(el) $prev = el;
-				return $prev;
-			},
-			next : function(el){
-				if(el) $next = el;
-				return $next;
-			}
-		};
 	}
-};
+	
+	function element($prev){
+		var $next;
+		return {
+			// won't work for nullifying a link, though
+			// that doesn't matter too much here
+			next:function(v){
+				return v ? $next = v : $next;
+			},
+			prev:function(v){
+				return v ? $prev = v : $prev;
+			}
+		}
+	}
+}
 
 // Lets you build a linked list of timestamps and gives some
 // functionality to compare the artists deltas between the
@@ -89,18 +81,14 @@ var timestamps = list({
 			this.redraw();
 			
 			this.next() && this.next().redraw();
-			this.prev() && this.prev().redraw && this.prev().redraw();
+			this.prev() && this.prev().redraw();
 		}
 		return (this.$artists || {});
 	},
 	deltas: function(){
-		var a = {};
+		var a = this.prev() ? this.prev().artists() : {};
 		var b = this.artists();
-		var c = {};
-		
-		try{ a = this.prev().artists() } catch (e){}
-		try{ c = this.next().artists() } catch (e){}
-		
+		var c = this.next() ? this.next().artists() : {};
 		
 		var keys = _({}).chain()
 					.extend({},a,b,c)
@@ -109,9 +97,9 @@ var timestamps = list({
 					.value();
 		
 		return keys.map(function(k){
-			var a_v = parseInt(a[k] || 0, 10);
-			var b_v = parseInt(b[k] || 0, 10);
-			var c_v = parseInt(c[k] || 0, 10);
+			var a_v = parseInt(a[k], 10) || 0;
+			var b_v = parseInt(b[k], 10) || 0;
+			var c_v = parseInt(c[k], 10) || 0;
 			
 			return [k, a_v, b_v, c_v];
 		})
@@ -165,10 +153,9 @@ var view = function(){
 			return;
 		}
 		
-		var h1 = 0;
-		var h2 = timestamp.plays();
-		var h3 = 0;
+		var h1,h2,h3;
 		
+		h2 = timestamp.plays();
 		try{h1 = timestamp.prev().plays()} catch(e){}
 		try{h3 = timestamp.next().plays()} catch(e){}
 		
@@ -312,8 +299,19 @@ var fetch = function(username,count){
 	
 	//get the list of weekly charts
 	last_fm('user.getweeklychartlist',{user:username}).done(function(data){
+		// _(data.weeklychartlist.chart).each(function(){
+		// 	timestamps.push(week);
+		// });
+		// 
+		
 		var chart = data.weeklychartlist.chart;
 		chart.reverse();
+		
+		_(chart).each(function(week){
+			timestamps.push(week);
+		});
+		
+		
 		_(chart).each(function(week,i){
 			if(i > count){
 				return;//unbreakable from _v1.1.3
