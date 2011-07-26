@@ -14,6 +14,7 @@ I've been thinking of this since :
 */
 
 
+
 // simple extension to underscore that I use somewhere
 _.mixin({
 	sum : function(list) {
@@ -33,6 +34,33 @@ _.mixin({
 			})
 		}
 		return params;
+	},
+	
+	// gets the union of keys in a list of collections
+	// and returns the values of each of those keys 
+	// indexed by the original collection index
+	// 
+	//   x = {a:1, b:2}, y = {a:5, c:10}
+	//   _([x,y]).valueArray()
+	//     => [[1,5],[2,0],[0,10]]
+	//
+	//   (ie. [x[a],y[a]],[x[b],y[b]],[x[c],y[c]] )
+	valueArray: function(collections){
+		var keys = _.uniq(
+			_.flatten(
+				_.map(collections,function(o){
+					return _.keys(o);
+					}
+				)
+			)
+		);
+		keys.sort();
+		
+		return _.map(keys,function(key){
+			return _.map(collections, function(o){
+				return parseInt(o[key],0) || 0;
+			});
+		});
 	}
 });
 
@@ -45,11 +73,15 @@ var list = function(proto){
 		push:function(args){
 			var el = element($last);
 			el.__proto__ = $proto;
+			el.init && el.init(args);
 			if($last) $last.next(el);
 			return $last = el;
 		},
 		clear:function(){
 			$last = null;
+		},
+		each:function(f){
+			$last && $last._each(f);
 		}
 	}
 	
@@ -63,6 +95,10 @@ var list = function(proto){
 			},
 			prev:function(v){
 				return v ? $prev = v : $prev;
+			},
+			_each:function(f){
+				this.prev() && this.prev()._each(f);
+				f(this);
 			}
 		}
 	}
@@ -73,22 +109,40 @@ var list = function(proto){
 // timestamps.
 //
 // props to Ed for inspiration on the artists comparison
-var timestamps = list({
+timestamp_proto = {
+	request:function(){
+		var timestamp = this;
+		last_fm('user.getweeklyartistchart', {user:this.username, from:this.from, to:this.to}).done(function(data){
+			try{
+				var artists = {};
+				_(data.weeklyartistchart.artist).each(function(a){
+					artists[a.name] = a.playcount;
+				});
+				
+				timestamp.artists(artists);
+				
+			} catch(e) {
+				err('Unable to process',e);
+			}
+		});
+	},
 	artists:function(data){
 		if(data){
 			this.$artists = data;
-			//also invalidate prev/next
-			this.redraw();
 			
-			this.next() && this.next().redraw();
-			this.prev() && this.prev().redraw();
+			//setting the artists should cause some redrawing
+			this.redraw();
+			this.next && this.next.redraw();
+			this.prev && this.prev.redraw();
 		}
 		return (this.$artists || {});
 	},
 	deltas: function(){
-		var a = this.prev() ? this.prev().artists() : {};
+		var a = this.prev ? this.prev.artists() : {};
 		var b = this.artists();
-		var c = this.next() ? this.next().artists() : {};
+		var c = this.next ? this.next.artists() : {};
+		
+		// return _.valueArray([a,b,c]);
 		
 		var keys = _({}).chain()
 					.extend({},a,b,c)
@@ -106,18 +160,21 @@ var timestamps = list({
 		
 	},
 	plays:function(){ //the total number of plays at timestamp
-		var values = _(this.artists()).values();
-		return _(values).reduce(function(b,a){
-			return parseInt(a,10) + parseInt(b, 10);
-		},0);
+		return _(_(this.artists()).map(function(value){
+			return parseInt(value,10);
+		})).sum();
 	},
 	view:function(what){
 		this.$view = what;
 	},
 	redraw:function(){
+		$('#t' + this.from).css('background-color','#fc0')
 		this.$view && this.$view(this);
 	}
-});
+};
+
+
+var timestamps = list(timestamp_proto);
 
 
 // gives a colour that is the result of hashing the key
@@ -135,6 +192,7 @@ var color = function(key){
 	return "rgba("+Math.min(r,256)+","+Math.min(g,256)+","+Math.min(b,256)+",0.9)"
 	
 }
+
 
 var view = function(){
 	var width = 180;
@@ -156,8 +214,8 @@ var view = function(){
 		var h1,h2,h3;
 		
 		h2 = timestamp.plays();
-		try{h1 = timestamp.prev().plays()} catch(e){}
-		try{h3 = timestamp.next().plays()} catch(e){}
+		try{h1 = timestamp.prev.plays()} catch(e){}
+		try{h3 = timestamp.next.plays()} catch(e){}
 		
 		canvas.get(0).height = _([h1||0,h2||0,h3||0,100]).max() * scale; //don't ask
 		
@@ -257,7 +315,7 @@ var err = function(message,err){
 // A rudimentary wrapper round last fm web services
 // returns a deferred object (not the ajax request - 
 // as this may resolve okay, but still have errors)
-var last_fm = function(method,params){
+function last_fm(method,params){
 	
 	var key = 'c2899b0774a2eda7769be6eefddd94b6';
 	var endpoint = 'http://ws.audioscrobbler.com/2.0/?callback=?';
@@ -280,65 +338,30 @@ var last_fm = function(method,params){
 	}).fail(dfr.reject);
 	
 	return dfr.promise();
-}
+};
 
-
-var chart_data;
-
-
-// 1. Get the weeks availible
-// 2. Get the artist chart for each week
 var fetch = function(username,count){
-	
-	//reset
-	$("#display").html("");
-	
-	timestamps.clear();
-	
-	chart_data = [];
 	
 	//get the list of weekly charts
 	last_fm('user.getweeklychartlist',{user:username}).done(function(data){
-		// _(data.weeklychartlist.chart).each(function(){
-		// 	timestamps.push(week);
-		// });
-		// 
 		
-		var chart = data.weeklychartlist.chart;
+	 	window.chart = data.weeklychartlist.chart;
 		chart.reverse();
 		
-		_(chart).each(function(week){
-			timestamps.push(week);
-		});
+		for (var i=0; i < chart.length; i++) {
+			
+			chart[i].prev = chart[i-1];
+			chart[i].next = chart[i+1];
+			chart[i].__proto__ = timestamp_proto;
+			chart[i].username = username;
+			// chart[i].view(view());
+			
+		};
 		
-		
-		_(chart).each(function(week,i){
-			if(i > count){
-				return;//unbreakable from _v1.1.3
-			}
-			
-			
-			//hack the renderer and timestamp together
-			// timestamp.view(view());
-			
-			var timestamp = timestamps.push();
-			timestamp.view(view());
-			
-			last_fm('user.getweeklyartistchart', {user:username, from:week.from, to:week.to}).done(function(data){
-				try{
-					var artists = _(data.weeklyartistchart.artist).reduce(function(memo, a){
-						memo[a.name] = a.playcount;
-						return memo;
-					},{});
-					
-					timestamp.artists(artists);
-					
-				} catch(e) {
-					err('Unable to process',e);
-				}
-			});
-			
-		});
+		//create the dom elements for this to draw to
+		$('#times').html(_(timestamps).reduce(function(memo, ts){
+			return memo + '<li id="t'+ts.from+'"></li>';
+		},''));
 		
 	})
 	
