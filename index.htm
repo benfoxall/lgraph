@@ -17,23 +17,77 @@ canvas{
 /*	border:1px solid #f08;*/
 /*	vertical-align:top;*/
 }
+body,html{
+/*	margin:0;*/
+/*	height:100%;*/
+	white-space:nowrap;
+	
+	font-family:helvetica, arial;
+}
+form{
+	display:inline;
+	vertical-align:middle;
+	
+/*	height:100%;*/
+/*	position:fixed;*/
+}
+input{
+/*	position:absolute;*/
+/*	top:50%;*/
+/*	width:10em;*/
+	height:1.4em;
+/*	margin-top:-.7em;*/
+	font-size:1em;
+	border: 1px solid #ccc;
+	left:1em;
+	-webkit-box-shadow:0 0 5px #ddd;
+	color:#555;
+	z-index:100;
+	
+	font-family:helvetica, arial;
+}
+input:hover{
+	-webkit-box-shadow:0 0 5px #aaa;
+}
+
+
+
+
+
 
 ol#times{
-	display:block;
-	clear:both;
-	white-space:nowrap;
+	
+	display:inline;
+	vertical-align:middle;
 	padding:0;
 }
 ol#times li{
 	display:inline-block;
 	vertical-align:middle;
-	min-height:1px;
-	width:180px;
-	border: 1px solid #999;
+	min-width:234px;
+	min-height:100px;
 }
-#t1309694400{
-	height:400px;
+
+.date{
+	display:block;
+	text-align:center;
+	font-size:.75em;
+	color:#ccc;
+	text-transform:uppercase;
+	vertical-align:middle;
 }
+
+.requesting .date{
+	color:#000;
+}
+.complete .date{
+	color:#666;
+}
+.error .date{
+	color:#c00;
+	cursor:pointer;
+}
+
 	</style>
 	
 	<!-- Drop any comments to @benjaminbenben -->
@@ -43,54 +97,86 @@ ol#times li{
 	<script src="code.js" type="text/javascript" charset="utf-8"></script>
 	
 	<script type="text/javascript" charset="utf-8">
+		window.config = {
+			api_key:'c2899b0774a2eda7769be6eefddd94b6',
+			scale: 1.3
+		};
+	
+	
 		$(function(){
-			$('#draw').click(function(e){
+			
+			function rerequest_errored(){
+				$('.error').first().trigger('request');
+				setTimeout(rerequest_errored, 500);
+			}
+			rerequest_errored();
+			
+			var request_visible = _.debounce(function(){
+				
+				var left = $(window).scrollLeft();
+				var right = left + $(window).width();
+				
+				$('li.unrequested').filter(function(){
+					var $el = $(this);
+					var l = $el.position().left;
+					var r = l + $el.width(); 
+					return l < right && r > left;
+					
+				}).trigger('request')
+				
+				
+			},50);
+			
+			
+			$(window).scroll(request_visible);
+			
+			
+			$('.error').live('click', function(){
+				$(this).trigger('request');
+			})
+			
+			
+			
+			
+			$('form').submit(function(e){
 				e.preventDefault();
 				var user = $('#user').val();
-				var weeks = parseInt($('#weeks').val(),10);
-				fetch(user,weeks);
 				
-				// FAO @jonleighton !
+				fetch(user).done(request_visible);
+				
 				history.pushState({}, "", "?" + $('form').serialize()); 
 			});
 			
 			//check for get params (badly)
 			var params = _(location.search).params();
 			$('#user').val(params.user || '');
-			// $('#weeks').val(params.weeks || '10');
+			
 			if(params.user){
-				$('#draw').click();
+				$('form').submit();
 			}
+			
 		});
+		
+		
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-1591924-3']);
+		_gaq.push(['_setDomainName', '.bfoxall.com']);
+		_gaq.push(['_trackPageview']);
+		
+		(function() {
+		  var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		  ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+
 	</script>
 </head>
 <body>
 	<noscript>This is Javascript, Yo</noscript>
-	<p class="err"></p>
+	
 	<form>
-		<label for="user">Lastfm User</label>
-		<input type="text" name="user" id="user" value="" />
-		
-		<!-- <label for="weeks">#Weeks</label>
-		<input type="text" name="weeks" id="weeks" value="10" /> -->
-		
-		<input type="submit" value="draw" id="draw"/>
+		<input type="text" name="user" id="user" placeholder="last.fm username">
 	</form>
-	<div id="display"></div>
 	<ol id="times"></ol>
-	<script type="text/javascript">
-
-	  var _gaq = _gaq || [];
-	  _gaq.push(['_setAccount', 'UA-1591924-3']);
-	  _gaq.push(['_setDomainName', '.bfoxall.com']);
-	  _gaq.push(['_trackPageview']);
-
-	  (function() {
-	    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-	    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-	    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-	  })();
-
-	</script>
 </body>
 </html>
