@@ -4,90 +4,16 @@
 <head>
 	<title>last fm canvas graph</title>
 	<style type="text/css" media="screen">
-/*body{font-family:Arial,"MS Trebuchet",sans-serif;margin:0;padding:0;}
-p.err,noscript{color:#c10000;font-size:1em;display:block;padding:.5em;margin:0;float:right;}
-p.err span{display:block;}
-form{border-bottom:1px dotted #ccc;padding:.5em;margin:0;}
-input{font-size:1em;font-weight:bold;}
-input#weeks{width:2em;}
-label{color:#666;font-size:.9em;}
-#times{font-weight:bold;float:right;}
-#display{white-space:nowrap;}*/
-canvas{
-/*	border:1px solid #f08;*/
-/*	vertical-align:top;*/
-}
-body,html{
-/*	margin:0;*/
-/*	height:100%;*/
-	white-space:nowrap;
-	
-	font-family:helvetica, arial;
-}
-form{
-	display:inline;
-	vertical-align:middle;
-	
-/*	height:100%;*/
-/*	position:fixed;*/
-}
-input{
-/*	position:absolute;*/
-/*	top:50%;*/
-/*	width:10em;*/
-	height:1.4em;
-/*	margin-top:-.7em;*/
-	font-size:1em;
-	border: 1px solid #ccc;
-	left:1em;
-	-webkit-box-shadow:0 0 5px #ddd;
-	color:#555;
-	z-index:100;
-	
-	font-family:helvetica, arial;
-}
-input:hover{
-	-webkit-box-shadow:0 0 5px #aaa;
-}
-
-
-
-
-
-
-ol#times{
-	
-	display:inline;
-	vertical-align:middle;
-	padding:0;
-}
-ol#times li{
-	display:inline-block;
-	vertical-align:middle;
-	min-width:234px;
-	min-height:100px;
-}
-
-.date{
-	display:block;
-	text-align:center;
-	font-size:.75em;
-	color:#ccc;
-	text-transform:uppercase;
-	vertical-align:middle;
-}
-
-.requesting .date{
-	color:#000;
-}
-.complete .date{
-	color:#666;
-}
-.error .date{
-	color:#c00;
-	cursor:pointer;
-}
-
+body,html{white-space:nowrap;font-family:helvetica,arial;}
+form{display:inline;vertical-align:middle;}
+input{height:1.4em;font-size:1em;border:1px solid #ccc;left:1em;-webkit-box-shadow:0 0 5px #ddd;color:#555;z-index:100;font-family:helvetica,arial;}
+input:hover{-webkit-box-shadow:0 0 5px #aaa;}
+ol#times{display:inline;vertical-align:middle;padding:0;}
+ol#times li{display:inline-block;vertical-align:middle;width:234px;}
+.date{display:block;text-align:center;font-size:.75em;color:#ccc;text-transform:uppercase;vertical-align:middle;text-decoration:none;}
+.requesting .date{color:#000;}
+.complete .date{color:#666;}
+.error .date{color:#c00;cursor:pointer;}
 	</style>
 	
 	<!-- Drop any comments to @benjaminbenben -->
@@ -105,26 +31,16 @@ ol#times li{
 	
 		$(function(){
 			
-			function rerequest_errored(){
+			//continuously re-request any errornous elements
+			(function rerequest_errored(){
 				$('.error').first().trigger('request');
-				setTimeout(rerequest_errored, 500);
-			}
-			rerequest_errored();
+				setTimeout(rerequest_errored, 1000);
+			})();
+			
+			
 			
 			var request_visible = _.debounce(function(){
-				
-				var left = $(window).scrollLeft();
-				var right = left + $(window).width();
-				
-				$('li.unrequested').filter(function(){
-					var $el = $(this);
-					var l = $el.position().left;
-					var r = l + $el.width(); 
-					return l < right && r > left;
-					
-				}).trigger('request')
-				
-				
+				$('li.unrequested').visible().trigger('request')
 			},50);
 			
 			
@@ -147,12 +63,12 @@ ol#times li{
 				history.pushState({}, "", "?" + $('form').serialize()); 
 			});
 			
-			//check for get params (badly)
+			//check for get params
 			var params = _(location.search).params();
 			$('#user').val(params.user || '');
 			
 			if(params.user){
-				$('form').submit();
+				fetch(params.user).done(request_visible);
 			}
 			
 		});
