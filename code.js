@@ -324,26 +324,34 @@ $.fn.timestamp = function(chartdata,username){
 	
 	var $this = this;
 	
-	$('<a>', {'class':'date', href:'#t' + chartdata.from, id:'t' + chartdata.from})
-		.text(_.formatTime(chartdata.from))
-		.appendTo($this);
+	if(chartdata){
+		$('<a>', {'class':'date', href:'#t' + chartdata.from, id:'t' + chartdata.from})
+			.text(_.formatTime(chartdata.from))
+			.appendTo($this);
+		
+		$this.addClass('unrequested');
+	} else {
+		$('<a>', {'class':'date'}).html('&nbsp;').appendTo($this);
+	}
 	
-	this.addClass('unrequested');
 	
-	this.data('has-canvas', false);
+	$this.data('has-canvas', false);
 	
 	// --bind events
 	// request - get information from the api
-	this.bind('request', function(){
-		var $el = $(this);
+	$this.bind('request', function(){
+		if(!chartdata){
+			return true;
+		}
+		
 		$this.attr('class','requesting');
 		lfm_api.artists(username, chartdata.from, chartdata.to).done(function(data){
-			$el.data('artists', data);
+			$this.data('artists', data);
 			
 			//trigger render events
-			$el.trigger('render');
-			$el.prev().trigger('render');
-			$el.next().trigger('render');
+			$this.trigger('render');
+			$this.prev().trigger('render');
+			$this.next().trigger('render');
 			
 			$this.attr('class','complete');
 			
@@ -353,9 +361,8 @@ $.fn.timestamp = function(chartdata,username){
 	});
 	
 	// render - draw information (triggered from request)
-	this.bind('render', function(){
+	$this.bind('render', function(){
 		
-		var $this = $(this);
 		var previous = $this.prev().data('artists') || {};
 		var next     = $this.next().data('artists') || {};
 		var current  = $this.data('artists') || {};
@@ -376,12 +383,12 @@ $.fn.timestamp = function(chartdata,username){
 		
 	});
 	
-	this.click(function(){
-		$this.trigger('request');
-	});
+	// $this.click(function(){
+	// 	$this.trigger('request');
+	// });
 	
 	
-	return this;
+	return $this;
 };
 
 
@@ -395,7 +402,7 @@ var fetch = function(user){
 		
 		$('#times').empty();
 		
-		for (var i=0; i < chart.length; i++) {
+		for (var i=-1; i < chart.length; i++) {
 			
 			$('<li>').timestamp(chart[i],user).appendTo($('#times'));
 			
