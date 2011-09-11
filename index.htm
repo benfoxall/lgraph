@@ -8,8 +8,8 @@ body,html{white-space:nowrap;font-family:helvetica,arial;}
 form{display:inline;vertical-align:middle;}
 input{height:1.4em;font-size:1em;border:1px solid #ccc;left:1em;-webkit-box-shadow:0 0 5px #ddd;color:#555;z-index:100;font-family:helvetica,arial;}
 input:hover{-webkit-box-shadow:0 0 5px #aaa;}
-ol#times{display:inline;vertical-align:middle;padding:0;}
-ol#times li{display:inline-block;vertical-align:middle;width:234px;}
+ol{display:inline;vertical-align:middle;padding:0;}
+ol li{display:inline-block;vertical-align:middle;width:234px;}
 .date{display:block;text-align:center;font-size:.75em;color:#ccc;text-transform:uppercase;vertical-align:middle;text-decoration:none;}
 .requesting .date{color:#000;}
 .complete .date{color:#666;}
@@ -17,11 +17,19 @@ ol#times li{display:inline-block;vertical-align:middle;width:234px;}
 	</style>
 	
 	<!-- Drop any comments to @benjaminbenben -->
+</head>
+<body>
+	<noscript>This is Javascript, Yo</noscript>
+	
+	<form>
+		<input type="text" name="user" id="user" placeholder="last.fm username">
+	</form>
+	<ol id="times"></ol>
+	
 	
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="_.js" type="text/javascript" charset="utf-8"></script>
 	<script src="code.js" type="text/javascript" charset="utf-8"></script>
-	
 	<script type="text/javascript" charset="utf-8">
 		window.config = {
 			api_key:'c2899b0774a2eda7769be6eefddd94b6',
@@ -46,21 +54,15 @@ ol#times li{display:inline-block;vertical-align:middle;width:234px;}
 			
 			$(window).scroll(request_visible);
 			
-			
-			$('.error').live('click', function(){
-				$(this).trigger('request');
-			})
-			
-			
-			
-			
 			$('form').submit(function(e){
 				e.preventDefault();
 				var user = $('#user').val();
 				
 				fetch(user).done(request_visible);
 				
-				history.pushState({}, "", "?" + $('form').serialize()); 
+				var qs = "?" + $('form').serialize();
+				history.pushState({}, "", qs); 	
+				_gaq.push(['_trackPageview', document.location.pathname ]);
 			});
 			
 			//check for get params
@@ -86,13 +88,5 @@ ol#times li{display:inline-block;vertical-align:middle;width:234px;}
 		})();
 
 	</script>
-</head>
-<body>
-	<noscript>This is Javascript, Yo</noscript>
-	
-	<form>
-		<input type="text" name="user" id="user" placeholder="last.fm username">
-	</form>
-	<ol id="times"></ol>
 </body>
 </html>
