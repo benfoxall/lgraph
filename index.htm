@@ -4,21 +4,24 @@
 <head>
 	<title>last fm canvas graph</title>
 	<style type="text/css" media="screen">
-body,html{white-space:nowrap;font-family:helvetica,arial;background-color:#fcfcfc;}
+body,html{white-space:nowrap;font-family:helvetica,arial;background-color:#fcfcfc;margin:1em;}
 form{display:inline;vertical-align:middle;}
-input{height:1.4em;font-size:1em;border:1px solid #ccc;left:1em;-webkit-box-shadow:0 0 5px #ddd;color:#555;z-index:100;font-family:helvetica,arial;}
+input{height:1.4em;font-size:1em;border:1px solid #ccc;left:1em;-webkit-box-shadow:0 0 5px #ddd;color:#555;z-index:100;font-family:helvetica,arial;margin-left:3em;margin-right:0;}
 input:hover{-webkit-box-shadow:0 0 5px #aaa;}
 ol{display:inline;vertical-align:middle;padding:0;}
-ol li{display:inline-block;vertical-align:middle;width:234px;}
-.date{display:block;text-align:center;font-size:.75em;color:#ccc;text-transform:uppercase;vertical-align:middle;text-decoration:none;}
+ol li{display:inline-block;vertical-align:middle;width:234px;line-height:0;}
+.date{display:block;text-align:center;font-size:.75em;color:#ccc;text-transform:uppercase;vertical-align:middle;text-decoration:none;position:absolute;margin-top:-1em;}
 .requesting .date{color:#000;}
 .complete .date{color:#666;}
 .error .date{color:#c00;cursor:pointer;}
+a{color:#08f;}
+p{background-color:#fff;margin:0;padding:1em;text-align:right;position:fixed;bottom:0;right:0;font-size:.75em;color:#aaa;}
 	</style>
 	
 	<!-- Drop any comments to @benjaminbenben -->
 </head>
 <body>
+	
 	<noscript>This is Javascript, Yo</noscript>
 	
 	<form>
@@ -26,6 +29,7 @@ ol li{display:inline-block;vertical-align:middle;width:234px;}
 	</form>
 	<ol id="times"></ol>
 	
+	<p>Built by <a href="http://twitter.com/benjaminbenben">@benjaminbenben</a> (<a class="lastfm" target="_blank" href="http://www.last.fm/user/benjaminf">benjaminf</a>) based on Lee Byrons <a href="http://www.leebyron.com/what/lastfm/">Listening History</a></p>
 	
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="_.js" type="text/javascript" charset="utf-8"></script>
@@ -61,7 +65,8 @@ ol li{display:inline-block;vertical-align:middle;width:234px;}
 				fetch(user).done(request_visible);
 				
 				var qs = "?" + $('form').serialize();
-				history.pushState({}, "", qs); 	
+				history.pushState({}, "", qs);
+				
 				_gaq.push(['_trackPageview', document.location.pathname + qs ]);
 			});
 			
@@ -72,6 +77,11 @@ ol li{display:inline-block;vertical-align:middle;width:234px;}
 			if(params.user){
 				fetch(params.user).done(request_visible);
 			}
+			
+			$('a.lastfm').click(function(){
+				$('#user').val('benjaminf');
+				$('form').submit();
+			})
 			
 		});
 		
