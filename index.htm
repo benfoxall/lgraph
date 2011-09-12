@@ -15,7 +15,7 @@ ol li{display:inline-block;vertical-align:middle;width:234px;line-height:0;}
 .complete .date{color:#666;}
 .error .date{color:#c00;cursor:pointer;}
 a{color:#08f;}
-p{background-color:#fff;margin:0;padding:1em;text-align:right;position:fixed;bottom:0;right:0;font-size:.75em;color:#aaa;}
+p#f{background-color:#fff;margin:0;padding:1em;text-align:right;position:fixed;bottom:0;right:0;font-size:.75em;color:#aaa;}
 	</style>
 	
 	<!-- Drop any comments to @benjaminbenben -->
@@ -29,7 +29,7 @@ p{background-color:#fff;margin:0;padding:1em;text-align:right;position:fixed;bot
 	</form>
 	<ol id="times"></ol>
 	
-	<p>Built by <a href="http://twitter.com/benjaminbenben">@benjaminbenben</a> (<a class="lastfm" target="_blank" href="http://www.last.fm/user/benjaminf">benjaminf</a>) based on Lee Byrons <a href="http://www.leebyron.com/what/lastfm/">Listening History</a></p>
+	<p id="f">Built by <a href="http://twitter.com/benjaminbenben">@benjaminbenben</a> (<a class="lastfm" target="_blank" href="http://www.last.fm/user/benjaminf">benjaminf</a>) based on Lee Byrons <a href="http://www.leebyron.com/what/lastfm/">Listening History</a></p>
 	
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="_.js" type="text/javascript" charset="utf-8"></script>
@@ -39,9 +39,10 @@ p{background-color:#fff;margin:0;padding:1em;text-align:right;position:fixed;bot
 			api_key:'c2899b0774a2eda7769be6eefddd94b6',
 			scale: 1.3
 		};
-	
-	
-		$(function(){
+		
+		if(!document.createElement("canvas").getContext){
+			$('form').replaceWith('<p>Canvas is not supported by this browser - try using <a href="http://www.mozilla.org/firefox/">Firefox</a> or <a href="www.google.co.uk/chrome">Chrome</a>.</p>')
+		} else {
 			
 			//continuously re-request any errornous elements
 			(function rerequest_errored(){
@@ -83,7 +84,7 @@ p{background-color:#fff;margin:0;padding:1em;text-align:right;position:fixed;bot
 				$('form').submit();
 			})
 			
-		});
+		}
 		
 		
 		var _gaq = _gaq || [];
