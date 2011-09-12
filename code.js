@@ -237,7 +237,7 @@ var canvasrenderer = (function(){
 		ctx.scale(scale,scale);
 
 		//clear the canvas
-		ctx.fillStyle = 'white';
+		ctx.fillStyle = '#fcfcfc';
 		ctx.fillRect(0,0,width,height);
 		
 		
