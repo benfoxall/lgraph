@@ -62,7 +62,7 @@ ol li{display:inline-block;vertical-align:middle;width:234px;}
 				
 				var qs = "?" + $('form').serialize();
 				history.pushState({}, "", qs); 	
-				_gaq.push(['_trackPageview', document.location.pathname ]);
+				_gaq.push(['_trackPageview', document.location.pathname + qs ]);
 			});
 			
 			//check for get params
