@@ -1,3 +1,4 @@
+/*jshint evil: true, boss: true */
 /*
 
 This is a hacky mess.
@@ -13,13 +14,6 @@ I've been thinking of this since :
 
 */
 
-window.config = {
-	scale:1.4
-};
-
-
-
-
 
 // # Helpers/Extensions
 // ## underscore.js
@@ -33,7 +27,7 @@ _.mixin({
 			_(parts).each(function(part){
 				var kv = part.split('=');
 				params[kv[0]] = kv[1];
-			})
+			});
 		}
 		return params;
 	},
@@ -51,13 +45,13 @@ _.mixin({
 		var h = 0;
 		for (var i=0; i < key.length; i++) {
 			h = (h + key.charCodeAt(i)) % 768;
-		};
+		}
 
-		var r = parseInt(Math.abs(h < 512 ? h : (h - 768)));
-		var g = parseInt(Math.abs(h - 256));
-		var b = parseInt(Math.abs(h - 512));
+		var r = parseInt(Math.abs(h < 512 ? h : (h - 768)),10);
+		var g = parseInt(Math.abs(h - 256),10);
+		var b = parseInt(Math.abs(h - 512),10);
 
-		return "rgba("+Math.min(r,256)+","+Math.min(g,256)+","+Math.min(b,256)+",0.9)"
+		return "rgba("+Math.min(r,256)+","+Math.min(g,256)+","+Math.min(b,256)+",0.9)";
 	},
 	
 	// returns the union of all keys for a set of objects
@@ -109,15 +103,15 @@ $.fn.visible = function(){
 		var r = l + $el.width(); 
 		return l < right && r > left;
 		
-	})
-}
+	});
+};
 
 // this won't actually do anything with the current
 // implementation of jsonp callbacks - though there
 // is a nice way to approach this which I'm working
 // on for a different site, so I'm going to keep it
 // in to remind me.
-$.ajaxSetup({ cache: true });
+$.ajaxSetup({cache: true});
 
 
 
@@ -132,7 +126,7 @@ var lfm_api = (function(){
 		chart: function(user){
 			return request('user.getweeklychartlist',{user:user}, function(data){
 				try{
-					var chart = data.weeklychartlist.chart
+					var chart = data.weeklychartlist.chart;
 					chart.reverse();
 					return chart;
 				} catch(e){
@@ -182,7 +176,7 @@ var lfm_api = (function(){
 		}).fail(dfr.reject);
 
 		return dfr.promise();
-	};
+	}
 	
 	
 })();
@@ -231,7 +225,7 @@ var canvasrenderer = (function(){
 		var max_offset = _.max(offsets);
 		offsets = _.map(offsets,function(o){
 			return (max_offset - o)/2;
-		})
+		});
 
 		var height = max_offset;// * scale;
 		var width = 180;
@@ -260,7 +254,7 @@ var canvasrenderer = (function(){
 				label = artists[i];
 			}
 			
-			ctx.fillStyle = _.colour(artists[i])
+			ctx.fillStyle = _.colour(artists[i]);
 			
 			drawSegment(ctx, width, offsets, data, label);
 		});
@@ -286,7 +280,7 @@ var canvasrenderer = (function(){
 		//update the current 
 		for (var i = current.length - 1; i >= 0; i--){
 			current[i] += data[i];
-		};
+		}
 
 		// then move back
 		ctx.lineTo(width,current[2]);
@@ -384,7 +378,7 @@ $.fn.timestamp = function(chartdata,username){
 	});
 	
 	// $this.click(function(){
-	// 	$this.trigger('request');
+	//	$this.trigger('request');
 	// });
 	
 	
@@ -406,8 +400,8 @@ var fetch = function(user){
 			
 			$('<li>').timestamp(chart[i],user).appendTo($('#times'));
 			
-		};
+		}
 				
-	})
+	});
 	
 };
