@@ -1,16 +1,8 @@
-/*jshint evil: true, boss: true */
 /*
 
-This is a hacky mess.
+Code : http://github.com/benfoxall/lgraph
 
-The main point is :
-	- generating is completely client side 
-	- that canvas is more appropriate than pdf/svg for these graphs
-
-I've been thinking of this since :
-	https://twitter.com/benjaminbenben/status/80283100822781952
-
-@benjaminbenben
+Written by @benjaminbenben - give me a shout about this,  or anything else!
 
 */
 
